@@ -7,7 +7,9 @@
         "scripting",
         "*://localhost/*",
         "*://codeforces.com/*",
-        "webNavigation"
+        "webNavigation",
+        "storage",
+        "alarms"
     ],
     "browser_specific_settings": {
         "gecko": {

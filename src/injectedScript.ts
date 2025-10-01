@@ -1,57 +1,93 @@
-// This script is injected into Codeforces submission page.
-import { ContentScriptData } from './types';
 import log from './log';
 
-declare const browser: any;
+type SubmissionData = {
+    problemName: string;
+    url: string;
+    sourceCode: string;
+    languageId: number;
+    timestamp: number;
+};
 
-if (typeof browser !== 'undefined') {
-    self.chrome = browser;
+log('cph-submit script injected. Observer is starting.');
+
+function runSubmissionObserver(attemptCount = 0) {
+    const MAX_ATTEMPTS = 60;
+    const submitButton = document.querySelector('input.submit[type="submit"]');
+
+    if (submitButton) {
+        log(`Observer found the submit form after ${attemptCount} attempts. Proceeding to fetch data.`);
+        fetchAndFillData();
+        return;
+    }
+
+    if (attemptCount < MAX_ATTEMPTS) {
+        log(`Observer did not find submit form. Retrying in 500ms... (Attempt ${attemptCount + 1}/${MAX_ATTEMPTS})`);
+        setTimeout(() => runSubmissionObserver(attemptCount + 1), 500);
+        return;
+    }
+
+    log('Observer stopped after maximum attempts. The submit form was not found.');
 }
 
-log('cph-submit script injected');
+async function fetchAndFillData() {
+    try {
+        const result = await chrome.storage.local.get('cph_last_submission');
+        const data = result['cph_last_submission'] as SubmissionData;
 
-const isContestProblem = (problemUrl: string) => {
-    return problemUrl.indexOf('contest') != -1;
-};
+        if (data && Date.now() - data.timestamp < 30000) {
+            log('Found fresh submission data in storage:', data);
+            await chrome.storage.local.remove('cph_last_submission'); 
+            fillForm(data);
+        } else {
+            log('No fresh submission data found in storage. Script will do nothing.');
+        }
+    } catch (e) {
+        console.error('CPH-SUBMIT [INJECTED]: Error while accessing storage!', e);
+    }
+}
 
-const handleData = (data: ContentScriptData) => {
-    log('Handling submit message');
-    const languageEl = document.getElementsByName(
-        'programTypeId',
-    )[0] as HTMLSelectElement;
-    const sourceCodeEl = document.getElementById(
-        'sourceCodeTextarea',
-    ) as HTMLTextAreaElement;
+function fillForm(data: SubmissionData) {
+    log('Starting to fill form with data.');
+    
+    const languageEl = document.querySelector('select[name="programTypeId"]') as HTMLSelectElement;
+    const sourceCodeTextarea = document.getElementById('sourceCodeTextarea') as HTMLTextAreaElement;
+    const submitBtn = document.querySelector('input.submit[type="submit"]') as HTMLInputElement;
+    const editor = (window as any).ace?.edit('editor');
 
-    sourceCodeEl.value = data.sourceCode;
-    languageEl.value = data.languageId.toString();
-
-    if (!isContestProblem(data.url)) {
-        const problemNameEl = document.getElementsByName(
-            'submittedProblemCode',
-        )[0] as HTMLInputElement;
-
-        problemNameEl.value = data.problemName;
-    } else {
-        const problemIndexEl = document.getElementsByName(
-            'submittedProblemIndex',
-        )[0] as HTMLSelectElement;
-
-        // Dont use problemName from data as it includes the contest number.
-        const problemName = data.url.split('/problem/')[1];
-        problemIndexEl.value = problemName;
+    if (!languageEl || !sourceCodeTextarea || !submitBtn) {
+        log('Error: One or more form elements disappeared unexpectedly.');
+        return;
     }
 
-    log('Submitting problem');
-    const submitBtn = document.querySelector('.submit') as HTMLButtonElement;
+    languageEl.value = data.languageId.toString();
+    sourceCodeTextarea.value = data.sourceCode;
+    if (editor) {
+        editor.setValue(data.sourceCode, 1);
+    }
+    log('Filled language and source code.');
+
+    const isContestOrGymProblem = (url: string) => url.includes('/contest/') || url.includes('/gym/');
+
+    if (isContestOrGymProblem(data.url)) {
+        const problemIndexEl = document.querySelector('select[name="submittedProblemIndex"]') as HTMLSelectElement;
+        if (problemIndexEl) {
+            const problemIndex = data.url.split('/').pop() || '';
+            problemIndexEl.value = problemIndex;
+            problemIndexEl.dispatchEvent(new Event('change'));
+            log(`Set problem index to: ${problemIndex}`);
+        }
+    } else {
+        const problemCodeEl = document.querySelector('input[name="submittedProblemCode"]') as HTMLInputElement;
+        if (problemCodeEl) {
+            problemCodeEl.value = data.problemName;
+            // SỬA LỖI 2: Sửa tên biến trong câu lệnh log
+            log(`Set problem code to: ${data.problemName}`);
+        }
+    }
+
+    log('Form filled. Clicking submit.');
     submitBtn.disabled = false;
     submitBtn.click();
-};
+}
 
-log('Adding event listener', chrome);
-chrome.runtime.onMessage.addListener((data: any, sender: any) => {
-    log('Got message', data, sender);
-    if (data.type == 'cph-submit') {
-        handleData(data);
-    }
-});
+runSubmissionObserver();
