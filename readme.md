@@ -1,76 +1,84 @@
-# ![ICON](icon-48.png) cph-submit
+# CPH-Submit
 
-Tiện ích trình duyệt cho phép nộp bài trực tiếp lên Codeforces từ [Competitive Programming Helper (cph)](https://github.com/agrawal-d/cph).
+![Icon](icon-48.png)
 
-## Hỗ trợ các trình duyệt
+This is a forked and enhanced version of [cph-submit](https://github.com/agrawal-d/cph), a browser extension that enables direct submission to Codeforces from the [Competitive Programming Helper (cph)](https://github.com/agrawal-d/cph) VS Code extension.
 
--   **Mozilla Firefox**
--   **Google Chrome**
--   **Microsoft Edge**
+This fork includes significant improvements over the original version, including:
+-   **Microsoft Edge Support**: Full compatibility with Microsoft Edge.
+-   **Codeforces Gym Support**: Correctly handles submissions for problems in Codeforces Gyms, including private ones.
+-   **Enhanced Reliability**: The submission logic has been completely refactored to be more robust. It is now resilient to race conditions, Cloudflare bot checks, and other page loading delays.
 
-## Cài đặt (Từ Cửa hàng)
+## Supported Browsers
 
-Bạn có thể cài đặt phiên bản ổn định từ các cửa hàng tiện ích chính thức:
+-   Mozilla Firefox
+-   Google Chrome
+-   Microsoft Edge
 
--   [Mozilla Firefox](https://addons.mozilla.org/en-US/firefox/addon/cph-submit/)
--   [Google Chrome](https://chromewebstore.google.com/detail/cph-submit/ekplnobooikgpdbobcciehbhcmlklgnc)
--   *Sắp có trên Microsoft Edge Add-ons*
+## Development Setup
 
-Sau khi cài đặt, hãy đảm bảo trình duyệt của bạn đang mở khi bạn muốn nộp bài từ cph trong VS Code.
+Follow these instructions to build the extension from the source code and install it for development or personal use.
 
-## Thiết lập Môi trường Phát triển
+### Prerequisites
 
-Nếu bạn muốn đóng góp hoặc tự build extension từ mã nguồn, hãy làm theo các bước sau.
+1.  **Node.js and npm**: Required for managing dependencies and running build scripts. You can download them [here](https://nodejs.org/).
+2.  **jq**: A command-line JSON processor used by the build script to merge manifest files. Download it [here](https://jqlang.github.io/jq/download/).
+3.  **Git Bash (for Windows users)**: The build script is a shell script (`.sh`). To run it on Windows, you need a compatible command-line environment like Git Bash, which is typically included with the [Git for Windows](https://git-scm.com/download/win) installation.
 
-### Yêu cầu Công cụ
+### Build Instructions
 
-1.  **Node.js và npm**: Cần thiết để quản lý các gói phụ thuộc và chạy các script.
-2.  **jq**: Một công cụ dòng lệnh để xử lý JSON. Script build dùng `jq` để gộp các file manifest. Bạn có thể tải về tại [đây](https://jqlang.github.io/jq/download/).
-3.  **Git Bash (Đối với người dùng Windows)**: File build `create-zip.sh` là một shell script. Để chạy nó trên Windows, bạn cần một môi trường dòng lệnh tương thích như Git Bash (thường được cài đặt cùng với Git cho Windows).
-
-### Các bước thực hiện
-
-1.  **Clone repository về máy:**
+1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/agrawal-d/cph-submit.git
+    git clone https://github.com/your-username/cph-submit.git
     cd cph-submit
     ```
 
-2.  **Cài đặt các gói phụ thuộc:**
+2.  **Install dependencies:**
     ```bash
     npm install
     ```
 
-3.  **Chạy script build cho môi trường phát triển:**
+3.  **Run the build script:**
     ```bash
     ./create-zip.sh
     ```
-    Lệnh này sẽ biên dịch mã nguồn TypeScript và tạo ra các thư mục `chrome/unpacked`, `firefox/unpacked`, và `edge/unpacked`. Mỗi thư mục này chứa một phiên bản đầy đủ của extension, sẵn sàng để được cài đặt thủ công.
+    This command compiles the TypeScript source code and creates ready-to-install "unpacked" extension directories for each browser:
+    -   `chrome/unpacked/`
+    -   `firefox/unpacked/`
+    -   `edge/unpacked/`
 
-## Cài đặt Tiện ích để Thử nghiệm (Load Unpacked)
+## How to Install the Unpacked Extension
 
-Sau khi chạy script build, bạn có thể cài đặt extension vào trình duyệt để kiểm tra.
+After building the project, you can load the extension directly into your browser for testing.
 
-### Dành cho Google Chrome và Microsoft Edge
+### For Google Chrome & Microsoft Edge
 
-1.  Mở trình duyệt và truy cập `chrome://extensions` (cho Chrome) hoặc `edge://extensions` (cho Edge).
-2.  Bật **"Chế độ nhà phát triển" (Developer mode)**.
-3.  Nhấp vào nút **"Tải phần mở rộng đã giải nén" (Load unpacked)**.
-4.  Chọn thư mục `unpacked` tương ứng (ví dụ: `.../cph-submit/edge/unpacked`).
-5.  Tiện ích sẽ được cài đặt và kích hoạt.
+1.  Open your browser and navigate to the extensions page:
+    -   Chrome: `chrome://extensions`
+    -   Edge: `edge://extensions`
+2.  Enable **"Developer mode"** (usually a toggle switch on the page).
+3.  Click the **"Load unpacked"** button.
+4.  In the file dialog, select the appropriate `unpacked` directory for your browser (e.g., `.../cph-submit/edge/unpacked`).
+5.  The extension will be installed and activated.
 
-### Dành cho Mozilla Firefox
+**To update the extension after making code changes:** Simply run the build script again (`./create-zip.sh`) and then click the "Reload" button (a circular arrow icon) on the extension's card in the `edge://extensions` page.
 
-1.  Mở Firefox và truy cập `about:debugging#/runtime/this-firefox`.
-2.  Nhấp vào **"Tải Tiện ích Bổ sung Tạm thời..." (Load Temporary Add-on...)**.
-3.  Trỏ đến thư mục `.../cph-submit/firefox/unpacked/`.
-4.  Chọn file **`manifest.json`** bên trong thư mục đó.
-5.  Tiện ích sẽ được cài đặt tạm thời cho đến khi bạn đóng trình duyệt.
+### For Mozilla Firefox
 
-## Đóng góp
+1.  Open Firefox and navigate to `about:debugging#/runtime/this-firefox`.
+2.  Click the **"Load Temporary Add-on..."** button.
+3.  Navigate into the `.../cph-submit/firefox/unpacked/` directory.
+4.  Select the **`manifest.json`** file inside that directory.
+5.  The add-on will be installed temporarily and will remain active until you close Firefox. To update, simply remove the old one and load the new `manifest.json` file again.
 
-Mọi sự đóng góp đều được chào đón.
+## Usage
 
-## Hỗ trợ
+Once installed, simply keep your browser open. When you trigger a submit action from the CPH extension in VS Code, a new tab will automatically open in your browser, fill in all the details, and submit your solution.
 
-Vui lòng tạo một "issue" trên GitHub nếu bạn cần hỗ trợ.
+## Contributing
+
+Contributions are welcome. Please open an issue to discuss any changes.
+
+## Support
+
+This fork is done by vibe-coding, so it may have issues. If you encounter any issues, please create an issue on this GitHub repository.
