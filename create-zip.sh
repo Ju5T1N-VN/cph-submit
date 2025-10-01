@@ -1,29 +1,35 @@
 #!/bin/bash
-echo "Creating extension.zip"
+echo "Creating unpacked directories for development..."
 
-# Build
-echo "Executing npm webpack script"
+# 1. Build mã nguồn TypeScript
+echo "Executing npm webpack script..."
 npm run webpack
 
-# Chrome
-rm -rf chrome
-mkdir chrome
-jq -s 'reduce .[] as $item ({}; . * $item)' manifest.partial.json manifest-chrome.partial.json > manifest.json
-zip -r chrome/extension.zip dist manifest.json icon-48.png
-unzip chrome/extension.zip -d chrome/unpacked
+# 2. Xóa các thư mục build cũ và tạo lại cấu trúc thư mục "unpacked"
+echo "Setting up directories..."
+rm -rf chrome firefox edge
+mkdir -p chrome/unpacked/dist
+mkdir -p firefox/unpacked/dist
+mkdir -p edge/unpacked/dist
 
-# Firefox
-rm -rf firefox
-mkdir firefox
-jq -s 'reduce .[] as $item ({}; . * $item)' manifest.partial.json manifest-firefox.partial.json > manifest.json
-zip -r firefox/extension.zip dist manifest.json icon-48.png
-unzip firefox/extension.zip -d firefox/unpacked
+# 3. Sao chép các file chung (icon và các file đã build trong 'dist')
+echo "Copying shared assets..."
+cp icon-48.png chrome/unpacked/
+cp icon-48.png firefox/unpacked/
+cp icon-48.png edge/unpacked/
+cp dist/* chrome/unpacked/dist/
+cp dist/* firefox/unpacked/dist/
+cp dist/* edge/unpacked/dist/
 
-rm -f manifest.json
+# 4. Tạo file manifest.json riêng cho từng trình duyệt
+echo "Generating browser-specific manifests..."
+jq -s 'reduce .[] as $item ({}; . * $item)' manifest.partial.json manifest-chrome.partial.json > chrome/unpacked/manifest.json
+jq -s 'reduce .[] as $item ({}; . * $item)' manifest.partial.json manifest-firefox.partial.json > firefox/unpacked/manifest.json
+jq -s 'reduce .[] as $item ({}; . * $item)' manifest.partial.json manifest-edge.partial.json > edge/unpacked/manifest.json
 
-# Source code
-echo "Creating source-code.zip"
-rm -fv source-code.zip
-zip -r source-code.zip ./ -x "node_modules/*" "dist/*" *.zip ".git/*" "web-ext-artifacts/*"
-
-echo "Done."
+echo ""
+echo "Build complete!"
+echo "You can now use the following directories with 'Load unpacked':"
+echo " - Chrome: ./chrome/unpacked"
+echo " - Firefox: ./firefox/unpacked"
+echo " - Edge: ./edge/unpacked"
