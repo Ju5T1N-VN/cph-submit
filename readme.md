@@ -29,7 +29,7 @@ Follow these instructions to build the extension from the source code and instal
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/cph-submit.git
+    git clone https://github.com/Ju5T1N-VN/cph-submit.git
     cd cph-submit
     ```
 
